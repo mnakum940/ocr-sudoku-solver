@@ -47,8 +47,8 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
-    // Check for errors in the board
-    const checkForErrors = (newBoard) => {
+    // Wrap checkForErrors in useCallback
+    const checkForErrors = useCallback((newBoard) => {
         const newErrors = Array(9).fill().map(() => Array(9).fill(false));
         
         // Check rows
@@ -105,7 +105,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         }
 
         setErrors(newErrors);
-    };
+    }, []); // No dependencies needed as it only uses setErrors which is stable
 
     // Animate OCR digits after image upload
     const animateOCRBoard = (ocrBoard, ocrSourceMap) => {
@@ -248,14 +248,8 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         }
     };
 
-    const handleCellClick = (row, col) => {
-        setSelectedCell({ row, col });
-        if (window.innerWidth < 768) {
-            setShowNumPad(true);
-        }
-    };
-
-    const moveSelection = (direction) => {
+    // Wrap moveSelection in useCallback
+    const moveSelection = useCallback((direction) => {
         if (!selectedCell) {
             setSelectedCell({ row: 0, col: 0 });
             return;
@@ -280,6 +274,13 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
             }
         }
         setSelectedCell({ row: newRow, col: newCol });
+    }, [selectedCell, initialBoard]); // Add dependencies that are used inside the callback
+
+    const handleCellClick = (row, col) => {
+        setSelectedCell({ row, col });
+        if (window.innerWidth < 768) {
+            setShowNumPad(true);
+        }
     };
 
     const handleNumberInput = (num) => {
