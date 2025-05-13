@@ -7,17 +7,9 @@
     "npm": ">=8.0.0 <9.0.0"
   },
   "dependencies": {
-    "@eslint/config-array": "^2.1.0",
-    "@eslint/object-schema": "^1.0.1",
-    "@jridgewell/sourcemap-codec": "^1.4.15",
-    "@rollup/plugin-terser": "^0.4.4",
-    "cra-template-pwa": "2.0.0",
-    "endo": "^0.1.0",
-    "glob": "^10.3.10",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "rimraf": "^5.0.5",
     "web-vitals": "^2.1.4",
     "workbox-cacheable-response": "^6.6.0",
     "workbox-core": "^6.6.0",
@@ -25,6 +17,11 @@
     "workbox-precaching": "^6.6.0",
     "workbox-routing": "^6.6.0",
     "workbox-strategies": "^6.6.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^2.1.4",
+    "eslint": "^8.57.0",
+    "eslint-config-react-app": "^7.0.1"
   },
   "scripts": {
     "start": "react-scripts start",
