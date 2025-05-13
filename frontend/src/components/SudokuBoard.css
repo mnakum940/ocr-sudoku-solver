@@ -100,7 +100,48 @@
 
 .upload-container {
     position: relative;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 200px;
+}
+
+.upload-button {
+    width: 100%;
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.upload-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.upload-button:disabled {
+    background-color: var(--disabled-color);
+    cursor: not-allowed;
+}
+
+.upload-error {
+    color: var(--error-color);
+    font-size: 12px;
+    text-align: center;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background-color: var(--error-bg);
+    border-radius: 4px;
+    width: 100%;
 }
 
 .file-input {
@@ -725,4 +766,44 @@
 
 .dark-mode .error-cell {
     color: var(--error-color-light);
+}
+
+/* Mobile-specific styles */
+@media (max-width: 768px) {
+    .upload-container {
+        max-width: 100%;
+        margin: 10px 0;
+    }
+
+    .upload-button {
+        padding: 12px 20px;
+        font-size: 16px;
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    .upload-error {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    /* Improve touch target size */
+    .upload-button {
+        min-height: 44px; /* Minimum touch target size */
+    }
+}
+
+/* Dark mode styles */
+.dark-mode .upload-button {
+    background-color: var(--primary-color-dark);
+}
+
+.dark-mode .upload-button:hover {
+    background-color: var(--primary-color);
+}
+
+.dark-mode .upload-error {
+    background-color: var(--error-bg-dark);
+    color: var(--error-color-dark);
 }
