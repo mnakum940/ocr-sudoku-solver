@@ -134,7 +134,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Manish Nakum - [@mnakum940](https://instagram.com/mnakum940)
 
-Project Link: [https://github.com/mnakum940/sudoku-solver](https://github.com/mnakum940/sudoku-solver)
+Project Link: [https://github.com/mnakum940/sudoku-solver](https://github.com/mnakum940/ocr-sudoku-solver)
 
 ## Acknowledgments 🙏
 
