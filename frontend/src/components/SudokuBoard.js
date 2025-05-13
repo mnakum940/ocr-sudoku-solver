@@ -26,6 +26,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
     const [showNumPad, setShowNumPad] = useState(false);
     const [errors, setErrors] = useState(Array(9).fill().map(() => Array(9).fill(false)));
     const [showConfetti, setShowConfetti] = useState(false);
+    const [uploadError, setUploadError] = useState('');
 
     // Add backend URL constant
     const BACKEND_URL = 'https://ocr-sudoku-solver.onrender.com';
@@ -347,13 +348,34 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
     }, [handleKeyPress]);
 
     const handleImageUpload = async (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files?.[0];
+        if (!file) {
+            setUploadError('No file selected');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            setUploadError('Please select an image file');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            setUploadError('Image size should be less than 5MB');
+            if (fileInputRef.current) fileInputRef.current.value = '';
+            return;
+        }
+
+        setUploadError('');
         setIsLoading(prev => ({ ...prev, upload: true }));
         setMessage('');
         startTimer();
+
         const formData = new FormData();
         formData.append('image', file);
+
         try {
             const response = await fetchWithTimeout(
                 `${BACKEND_URL}/process-image`,
@@ -361,7 +383,6 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                     method: 'POST',
                     body: formData,
                     headers: {
-                        // Don't set Content-Type for FormData, browser will set it with boundary
                         'Accept': 'application/json',
                     },
                 }
@@ -386,6 +407,16 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         } finally {
             setIsLoading(prev => ({ ...prev, upload: false }));
             if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
+    // Add a function to handle the upload button click
+    const handleUploadClick = () => {
+        if (fileInputRef.current) {
+            // Reset any previous errors
+            setUploadError('');
+            // Trigger the file input click
+            fileInputRef.current.click();
         }
     };
 
@@ -559,18 +590,25 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                         <input
                             type="file"
                             accept="image/*"
+                            capture="environment" // Enable camera on mobile devices
                             onChange={handleImageUpload}
                             ref={fileInputRef}
                             className="file-input"
                             disabled={isLoading.upload}
+                            style={{ display: 'none' }} // Hide the actual file input
                         />
                         <button
-                            onClick={() => fileInputRef.current?.click()}
+                            onClick={handleUploadClick}
                             className="control-button upload-button"
                             disabled={isLoading.upload}
                         >
                             {isLoading.upload ? 'Processing...' : 'Upload Image'}
                         </button>
+                        {uploadError && (
+                            <div className="upload-error">
+                                {uploadError}
+                            </div>
+                        )}
                     </div>
                 </div>
 
