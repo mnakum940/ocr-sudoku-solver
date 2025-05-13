@@ -1,14 +1,30 @@
 import cv2
 import numpy as np
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd = r"C:\\Program Files\\Tesseract-OCR\\tesseract.exe"
-from typing import List, Tuple, Optional
 import os
+import platform
+
+# Configure Tesseract path based on the operating system
+if platform.system() == 'Windows':
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+elif platform.system() == 'Linux':
+    # On Linux, Tesseract should be in the system PATH
+    pass
+else:
+    # For other systems (like macOS), assume Tesseract is in PATH
+    pass
+
+from typing import List, Tuple, Optional
 
 class SudokuImageProcessor:
     def __init__(self):
         self.size = 9
         self.box_size = 3
+        # Verify Tesseract is available
+        try:
+            pytesseract.get_tesseract_version()
+        except Exception as e:
+            raise RuntimeError(f"Tesseract OCR is not properly installed or configured: {str(e)}")
 
     def preprocess_image(self, image: np.ndarray) -> np.ndarray:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
