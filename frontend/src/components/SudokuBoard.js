@@ -30,6 +30,43 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
     // Add backend URL constant
     const BACKEND_URL = 'https://ocr-sudoku-solver.onrender.com';
 
+    // Add a helper function for fetch requests
+    const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+
+        try {
+            const response = await fetch(url, {
+                ...options,
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    ...options.headers,
+                },
+            });
+            clearTimeout(id);
+            
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(
+                    errorData?.detail || 
+                    `Server responded with status: ${response.status} ${response.statusText}`
+                );
+            }
+            return response;
+        } catch (error) {
+            clearTimeout(id);
+            if (error.name === 'AbortError') {
+                throw new Error('Request timed out. Please try again.');
+            }
+            if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
+            }
+            throw error;
+        }
+    };
+
     // Timer effect
     useEffect(() => {
         let interval;
@@ -179,15 +216,19 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setErrors(Array(9).fill().map(() => Array(9).fill(false)));
         startTimer();
         try {
-            const response = await fetch(`${BACKEND_URL}/generate?difficulty=${difficulty}`);
-            if (!response.ok) throw new Error('Failed to generate puzzle');
+            console.log('Fetching from:', `${BACKEND_URL}/generate?difficulty=${difficulty}`);
+            const response = await fetchWithTimeout(
+                `${BACKEND_URL}/generate?difficulty=${difficulty}`,
+                { method: 'GET' }
+            );
             const data = await response.json();
             setBoard(data.puzzle);
             setInitialBoard(data.puzzle.map(row => [...row]));
             setSourceMap(Array(9).fill().map(() => Array(9).fill('empty')));
             setOriginMap(Array(9).fill().map(() => Array(9).fill('empty')));
         } catch (error) {
-            setMessage('Error generating puzzle: ' + error.message);
+            console.error('Generate puzzle error:', error);
+            setMessage(`Error generating puzzle: ${error.message}`);
             stopTimer();
         } finally {
             setIsLoading(prev => ({ ...prev, generate: false }));
@@ -200,14 +241,13 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setMessage('');
         stopTimer();
         try {
-            const response = await fetch(`${BACKEND_URL}/solve?show_steps=true`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ board }),
-            });
-            if (!response.ok) throw new Error('Failed to solve puzzle');
+            const response = await fetchWithTimeout(
+                `${BACKEND_URL}/solve?show_steps=true`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ board }),
+                }
+            );
             const data = await response.json();
             if (data.steps) {
                 animateBacktracking(data.steps, data.board);
@@ -217,7 +257,8 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                 setTimeout(() => setShowConfetti(false), 5000);
             }
         } catch (error) {
-            setMessage('Error solving puzzle: ' + error.message);
+            console.error('Solve puzzle error:', error);
+            setMessage(`Error solving puzzle: ${error.message}`);
         } finally {
             setIsLoading(prev => ({ ...prev, solve: false }));
         }
@@ -228,14 +269,13 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setMessage('');
         checkForErrors(board);
         try {
-            const response = await fetch(`${BACKEND_URL}/validate`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ board }),
-            });
-            if (!response.ok) throw new Error('Failed to validate board');
+            const response = await fetchWithTimeout(
+                `${BACKEND_URL}/validate`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({ board }),
+                }
+            );
             const data = await response.json();
             if (data.is_valid) {
                 setMessage('Board is valid! 🎉');
@@ -245,7 +285,8 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                 setMessage('Board is invalid. Check for errors highlighted in red.');
             }
         } catch (error) {
-            setMessage('Error validating board: ' + error.message);
+            console.error('Validate board error:', error);
+            setMessage(`Error validating board: ${error.message}`);
         } finally {
             setIsLoading(prev => ({ ...prev, validate: false }));
         }
@@ -351,11 +392,17 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         const formData = new FormData();
         formData.append('image', file);
         try {
-            const response = await fetch(`${BACKEND_URL}/process-image`, {
-                method: 'POST',
-                body: formData,
-            });
-            if (!response.ok) throw new Error('Failed to process image');
+            const response = await fetchWithTimeout(
+                `${BACKEND_URL}/process-image`,
+                {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        // Don't set Content-Type for FormData, browser will set it with boundary
+                        'Accept': 'application/json',
+                    },
+                }
+            );
             const data = await response.json();
             if (data.board && data.source_map) {
                 animateOCRBoard(data.board, data.source_map);
@@ -370,7 +417,8 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
             setOriginMap(Array(9).fill().map(() => Array(9).fill('empty')));
             setErrors(Array(9).fill().map(() => Array(9).fill(false)));
         } catch (error) {
-            setMessage('Error processing image: ' + error.message);
+            console.error('Image upload error:', error);
+            setMessage(`Error processing image: ${error.message}`);
             stopTimer();
         } finally {
             setIsLoading(prev => ({ ...prev, upload: false }));
