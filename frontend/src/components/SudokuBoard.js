@@ -30,6 +30,9 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
     // Add backend URL constant
     const BACKEND_URL = 'https://ocr-sudoku-solver.onrender.com';
 
+    // Add server status state
+    const [serverStatus, setServerStatus] = useState('checking');
+
     // Add a helper function for fetch requests
     const fetchWithTimeout = async (url, options = {}, timeout = 10000) => {
         const controller = new AbortController();
@@ -504,6 +507,67 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         }
     }, [selectedCell]);
 
+    // Add server status check effect
+    useEffect(() => {
+        const checkServerStatus = async () => {
+            try {
+                console.log('Checking server status at:', BACKEND_URL);
+                const response = await fetchWithTimeout(
+                    `${BACKEND_URL}/health`,
+                    { method: 'GET' },
+                    5000 // shorter timeout for health check
+                );
+                if (response.ok) {
+                    setServerStatus('online');
+                    console.log('Server is online');
+                } else {
+                    setServerStatus('error');
+                    console.error('Server returned error status:', response.status);
+                }
+            } catch (error) {
+                setServerStatus('error');
+                console.error('Server status check failed:', error);
+                // Log detailed error information
+                if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+                    console.error('CORS or network error. Backend URL:', BACKEND_URL);
+                    console.error('Error details:', {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    });
+                }
+            }
+        };
+
+        checkServerStatus();
+    }, []); // Empty dependency array means this runs once on mount
+
+    // Modify the message display to show server status
+    const renderMessage = () => {
+        if (serverStatus === 'checking') {
+            return <div className="message">Checking server connection...</div>;
+        }
+        if (serverStatus === 'error') {
+            return (
+                <div className="message error">
+                    Unable to connect to the server. Please check if the backend is running at {BACKEND_URL}
+                </div>
+            );
+        }
+        if (message) {
+            return (
+                <div className={`message${
+                    message.includes('review the recognized digits') ? ' blink' : 
+                    message.includes('Error') ? ' error' : 
+                    ' success'
+                }`}>
+                    {message}
+                </div>
+            );
+        }
+        return null;
+    };
+
     return (
         <div className={`sudoku-app ${isDarkMode ? 'dark-mode' : ''}`}>
             <div className="app-header">
@@ -574,11 +638,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                     </div>
                 </div>
 
-                {message && (
-                    <div className={`message${message.includes('review the recognized digits') ? ' blink' : message.includes('Error') ? ' error' : ' success'}`}>
-                        {message}
-                    </div>
-                )}
+                {renderMessage()}
 
                 <div className="board-wrapper">
                     <div className="board" ref={boardRef}>
