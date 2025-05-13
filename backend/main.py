@@ -19,7 +19,10 @@ app = FastAPI(title="Sudoku Solver API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React app's address
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "https://ocr-sudoku-solver.netlify.app",  # Production frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
