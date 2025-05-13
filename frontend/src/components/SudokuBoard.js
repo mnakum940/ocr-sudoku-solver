@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './SudokuBoard.css';
 import Footer from './Footer';
 
@@ -297,7 +297,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         checkForErrors(newBoard);
     };
 
-    const handleKeyPress = (event) => {
+    const handleKeyPress = useCallback((event) => {
         if (!selectedCell) {
             setSelectedCell({ row: 0, col: 0 });
             return;
@@ -331,7 +331,12 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
                 break;
             default: break;
         }
-    };
+    }, [selectedCell, board, moveSelection, checkForErrors]);
+
+    useEffect(() => {
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [handleKeyPress]);
 
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
@@ -435,11 +440,6 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
 
         animateStep();
     };
-
-    useEffect(() => {
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [selectedCell, board, initialBoard]);
 
     // Scroll into view when selected cell changes on mobile
     useEffect(() => {
