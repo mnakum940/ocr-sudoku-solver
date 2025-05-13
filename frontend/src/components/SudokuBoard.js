@@ -27,6 +27,9 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
     const [errors, setErrors] = useState(Array(9).fill().map(() => Array(9).fill(false)));
     const [showConfetti, setShowConfetti] = useState(false);
 
+    // Add backend URL constant
+    const BACKEND_URL = 'https://ocr-sudoku-solver.onrender.com';
+
     // Timer effect
     useEffect(() => {
         let interval;
@@ -176,7 +179,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setErrors(Array(9).fill().map(() => Array(9).fill(false)));
         startTimer();
         try {
-            const response = await fetch(`http://localhost:8000/generate?difficulty=${difficulty}`);
+            const response = await fetch(`${BACKEND_URL}/generate?difficulty=${difficulty}`);
             if (!response.ok) throw new Error('Failed to generate puzzle');
             const data = await response.json();
             setBoard(data.puzzle);
@@ -197,7 +200,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setMessage('');
         stopTimer();
         try {
-            const response = await fetch('http://localhost:8000/solve?show_steps=true', {
+            const response = await fetch(`${BACKEND_URL}/solve?show_steps=true`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -225,7 +228,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         setMessage('');
         checkForErrors(board);
         try {
-            const response = await fetch('http://localhost:8000/validate', {
+            const response = await fetch(`${BACKEND_URL}/validate`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -348,7 +351,7 @@ const SudokuBoard = ({ isDarkMode, onDarkModeChange }) => {
         const formData = new FormData();
         formData.append('image', file);
         try {
-            const response = await fetch('http://localhost:8000/process-image', {
+            const response = await fetch(`${BACKEND_URL}/process-image`, {
                 method: 'POST',
                 body: formData,
             });
